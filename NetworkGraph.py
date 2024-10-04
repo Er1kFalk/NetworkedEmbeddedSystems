@@ -6,6 +6,7 @@ Created on Thu Oct  3 13:55:54 2024
 """
 
 from enum import Enum
+from CSVUtilities import getCsvLines
 
 class DeviceType(Enum):
     NA = 0
@@ -21,34 +22,13 @@ class Node:
     ports = 0
     domain = ''
     
-    def __init__(self, deviceType = DeviceType.NA, deviceName = '', ports = 0, domain = ''):
-        """
-        Parameters
-        ----------
-        deviceType : Enum DeviceType, optional
-            The default is DeviceType.NA.
-        deviceName : String, optional
-            The default is ''.
-        ports : int, optional
-            The default is 0.
-        domain : string, optional
-            The default is ''.
-
-        Returns
-        -------
-        None.
-
-        """
-        self.deviceType = deviceType
-        self.deviceName = deviceName
-        self.ports = ports
-        self.domain = domain
-
 class Link:
-    link = ''
     linkId = 0
-    source = Node()
-    destination = Node()
+    sourceDevice = ''
+    sourcePort = 0
+    destinationDevice = ''
+    destinationPort = 0
+    domain = ''
 
 class NetworkGraph:
     """
@@ -56,22 +36,6 @@ class NetworkGraph:
     """
     edges = [] # list of (n1, n2) where n1=start node, n2=end node
     vertices = [] # list of (id, s) where id is a unique integer, and s is a name for the node
-    def __init__(self, edges, vertices):
-        """
-        Parameters
-        ----------
-        edges : (n1, n2)
-            - edges : list of (n1, n2) where n1=start Node, n2=end Node
-            - vertices: list of (id, node) where id is a unique integer, and node is a Node
-        vertices : Node
-        Returns
-        -------
-        None.
-
-        """
-        self.edges = edges
-        self.vertices = vertices
-        self.nodeId = 0
         
     def addEdge(self, edge):
         """
@@ -104,3 +68,33 @@ class NetworkGraph:
         """
         self.vertices.append(vertice)
         
+def readNetworkGraph():
+    nodeLines = getCsvLines('ExampleFiles/example_topology.csv')
+    nodeList = []
+    nwg = NetworkGraph()
+    for line in nodeLines:
+        if (line[0] == 'LINK'):
+            tmpLink = Link()            
+            tmpLink.linkId = line[1]
+            tmpLink.sourceDevice = line[2]
+            tmpLink.sourcePort = int(line[3])
+            tmpLink.destinationDevice = line[4]
+            tmpLink.destinationPort = int(line[5])
+            tmpLink.domain = line[6]
+            nwg.addEdge(tmpLink)
+        else:
+            tmpNode = Node()
+            if (line[0] == 'ES'):
+                tmpNode.deviceType = DeviceType.ES
+            elif (line[0] == 'SW'):
+                tmpNode.deviceType = DeviceType.SW
+            tmpNode.deviceName = line[1]
+            tmpNode.ports = int(line[2])
+            tmpNode.domain = line[3]
+            nwg.addVertice(tmpNode)
+            
+    return nwg
+        
+nwg = readNetworkGraph()
+
+
