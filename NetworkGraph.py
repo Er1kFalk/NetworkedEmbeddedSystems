@@ -7,6 +7,7 @@ Created on Thu Oct  3 13:55:54 2024
 
 from enum import Enum
 from CSVUtilities import getCsvLines
+from collections import deque
 
 class DeviceType(Enum):
     NA = 0
@@ -36,7 +37,7 @@ class NetworkGraph:
     """
     edges = [] # list of (n1, n2) where n1=start node, n2=end node
     vertices = [] # list of (id, s) where id is a unique integer, and s is a name for the node
-        
+       
     def addEdge(self, edge):
         """
         Adds an edge to the network graph.
@@ -70,7 +71,6 @@ class NetworkGraph:
         
 def readNetworkGraph():
     nodeLines = getCsvLines('ExampleFiles/example_topology.csv')
-    nodeList = []
     nwg = NetworkGraph()
     for line in nodeLines:
         if (line[0] == 'LINK'):
