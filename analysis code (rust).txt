@@ -1,0 +1,63 @@
+// Max frame size in bits including preamble and interframe gap
+const MAX_FRAME_SIZE: usize = (1522 + 8 + 12) * 8
+const MIN_FRAME_SIZE: usize = (64 + 8 + 12) * 8
+
+use std::time::Instant;
+
+use crate::{
+	application::frame::Frame,
+	network::(edge::Edge, topology::Topology},
+};
+
+use super::result storage::ResultStorage;
+
+pub struct Analyzer {}
+
+impl Analyzer {
+	pub fn new() -> Self {
+		Analyzer ()
+	}
+
+	pub fn go(self, topology: &Topology) -> ResultStorage{
+		println("Starting analysis");
+		let mut frame_results = ResultStorage::new(topology.get_flow_to_frame_mapping());
+
+		
+		let now = Instant::now();
+		for frame in topology.get all ats_frames() {
+			for link_id in frame.get route() {
+				let link = topology.get_link(link_id);
+				let hop_delay =self.analyze frame_hop(frame, link);
+				frame_results.insert_frame_hop_delay(
+					frame,
+					Link.human readable_name.clone(),
+					hop_delay,
+				);
+			}
+		}
+		println(
+			"Analysis Done! Analysis time: ()s",
+			(now.elapsed().as micros() as f32) / 1_000_000.0
+		};
+
+		return frame results;
+	}
+	
+	fn analyze frame hop(self, frame: &Frame, link: Edge) -> 132 {
+		let sum_higer_or_equal_priority_bursts =
+			link.get_sun_higer_or_equal_priority_bursts(frame.get_priority());
+		let sum_higer_priority_rate = link.get_sum_higer_priority_rate(frame.get_priority());
+
+		// println("Edge: (), has gcl: ()", link.get_id(), link.gcl.is some());
+
+		let gcl_delay = link.get_gcl_delay(frame.get_priority(), frame.get_length());
+
+		let hop_delay = ((sum higer_or_equal_priority_bursts + link.get_max_frame_size() -link.get_min_frame_size())
+			as f32)
+			/((link.get_bandwidth() - sum_higer_priority_rate) as f32)
+			+(link.get_min_frame_size() as f32)/(link.get_bandwidth() as f32)
+			+ gcl_delay;
+
+		return hop_delay;
+	}
+}
