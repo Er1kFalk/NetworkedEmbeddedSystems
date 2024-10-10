@@ -30,6 +30,22 @@ class Link:
     destinationDevice = ''
     destinationPort = 0
     domain = ''
+    
+class StreamType(Enum):
+    NONE = 0
+    ATS = 1
+    AVB = 2
+    
+class Stream:
+    PCP = 0
+    streamName = ''
+    streamType = StreamType.NONE
+    sourceNode = ''
+    destinationNode = ''
+    size = 0
+    period = 0
+    deadline = 0
+
 
 class NetworkGraph:
     """
@@ -37,7 +53,8 @@ class NetworkGraph:
     """
     edges = [] # list of (n1, n2) where n1=start node, n2=end node
     vertices = [] # list of (id, s) where id is a unique integer, and s is a name for the node
-       
+    paths = [] # streams
+    
     def addEdge(self, edge):
         """
         Adds an edge to the network graph.
@@ -68,33 +85,57 @@ class NetworkGraph:
 
         """
         self.vertices.append(vertice)
+    
+    def addPath(self, path):
+        self.paths.append(path)
         
-def readNetworkGraph():
-    nodeLines = getCsvLines('ExampleFiles/example_topology.csv')
-    nwg = NetworkGraph()
-    for line in nodeLines:
-        if (line[0] == 'LINK'):
-            tmpLink = Link()            
-            tmpLink.linkId = line[1]
-            tmpLink.sourceDevice = line[2]
-            tmpLink.sourcePort = int(line[3])
-            tmpLink.destinationDevice = line[4]
-            tmpLink.destinationPort = int(line[5])
-            tmpLink.domain = line[6]
-            nwg.addEdge(tmpLink)
-        else:
-            tmpNode = Node()
-            if (line[0] == 'ES'):
-                tmpNode.deviceType = DeviceType.ES
-            elif (line[0] == 'SW'):
-                tmpNode.deviceType = DeviceType.SW
-            tmpNode.deviceName = line[1]
-            tmpNode.ports = int(line[2])
-            tmpNode.domain = line[3]
-            nwg.addVertice(tmpNode)
-            
-    return nwg
+    def readNetworkTopology(self):
+        nodeLines = getCsvLines('ExampleFiles/example_topology.csv')
+        for line in nodeLines:
+            if (line[0] == 'LINK'):
+                tmpLink = Link()            
+                tmpLink.linkId = line[1]
+                tmpLink.sourceDevice = line[2]
+                tmpLink.sourcePort = int(line[3])
+                tmpLink.destinationDevice = line[4]
+                tmpLink.destinationPort = int(line[5])
+                tmpLink.domain = line[6]
+                self.addEdge(tmpLink)
+            else:
+                tmpNode = Node()
+                if (line[0] == 'ES'):
+                    tmpNode.deviceType = DeviceType.ES
+                elif (line[0] == 'SW'):
+                    tmpNode.deviceType = DeviceType.SW
+                tmpNode.deviceName = line[1]
+                tmpNode.ports = int(line[2])
+                tmpNode.domain = line[3]
+                self.addVertice(tmpNode)
+                
+        return self
+
+    def readNetworkStream(self):
+        streamLines = getCsvLines('ExampleFiles/example_streams.csv')
+        for line in streamLines:
+            tmpStream = Stream()
+            tmpStream.PCP = int(line[0])
+            tmpStream.streamName = line[1]
+            if (line[2] == 'ATS'):
+                tmpStream.streamType = StreamType.ATS
+            elif (line[2] == 'AVB'):
+                tmpStream.streamType = StreamType.AVB
+            else:
+                raise "parsing error - not a valid streamtype"
+            tmpStream.sourceNode = line[3]
+            tmpStream.destinationNode = line[4]
+            tmpStream.size = int(line[5])
+            tmpStream.period = int(line[6])
+            tmpStream.deadline = int(line[7])
+            self.addPath(tmpStream)
+        return self
         
-nwg = readNetworkGraph()
+nwg = NetworkGraph()
+nwg.readNetworkTopology().readNetworkStream()
+
 
 
